@@ -1,0 +1,228 @@
+@startuml Solar_Panel_Frontend_Architecture
+
+!theme cerulean
+skinparam backgroundColor #0d1117
+skinparam defaultFontColor #c9d1d9
+skinparam defaultFontName Inter
+skinparam defaultFontSize 12
+skinparam ArrowColor #58a6ff
+skinparam ArrowThickness 1.5
+
+skinparam package {
+    BackgroundColor #161b22
+    BorderColor #30363d
+    FontColor #58a6ff
+    FontSize 14
+    FontStyle bold
+}
+
+skinparam class {
+    BackgroundColor #1c2128
+    BorderColor #30363d
+    HeaderBackgroundColor #21262d
+    FontColor #c9d1d9
+    AttributeFontColor #8b949e
+    StereotypeFontColor #7c3aed
+}
+
+skinparam note {
+    BackgroundColor #1c2128
+    BorderColor #30363d
+    FontColor #8b949e
+}
+
+title **Solar Panel Defect Detection — Frontend UML Class Diagram**\n//React + Vite + Clerk Authentication//
+
+' ══════════════════════════════════════════════════════
+'  ENTRY POINT & ROOT
+' ══════════════════════════════════════════════════════
+
+package "Entry & Root" as ENTRY #161b22 {
+
+    class "main.jsx" as Main <<Entry Point>> {
+        + PUBLISHABLE_KEY : string
+        --
+        Renders <ClerkProvider>
+        wrapping <BrowserRouter> and <App>
+    }
+
+    class "App.jsx" as App <<Root Component>> {
+        + API_BASE_URL : string = "http://localhost:8000"
+        --
+        + AppContent() : JSX
+        + Navbar() : JSX
+        + Footer() : JSX
+        + SignInRequired() : JSX
+        + AccessDenied() : JSX
+        --
+        **Routes:**
+        .. / → Home ..
+        .. /detect → Detection (guarded) ..
+        .. /history → History (guarded) ..
+        .. /admin → AdminDashboard (guarded) ..
+    }
+
+    Main --> App : renders
+}
+
+' ══════════════════════════════════════════════════════
+'  PAGES
+' ══════════════════════════════════════════════════════
+
+package "Pages" as PAGES #161b22 {
+
+    class "Home.jsx" as Home <<Page>> {
+        + Hero() : JSX
+        + SolarEnergyImportance() : JSX
+        + DefectDetectionImportance() : JSX
+        + Workflow() : JSX
+        + TechStack() : JSX
+        + DefectTypes() : JSX
+        + Features() : JSX
+        + FAQ() : JSX
+        + About() : JSX
+    }
+
+    class "Detection.jsx" as Detection <<Page>> {
+        - file : File
+        - preview : string
+        - result : object
+        - loading : boolean
+        --
+        + handleUpload() : void
+        + handlePredict() : void
+        + saveToHistory() : void
+        --
+        **API Calls:**
+        POST /predict/yolov8
+        POST /history/save
+    }
+
+    class "History.jsx" as History <<Page>> {
+        - scans : DetectionRecord[]
+        - selectedScan : DetectionRecord
+        --
+        + fetchHistory() : void
+        + deleteScan() : void
+        + clearAll() : void
+        --
+        **API Calls:**
+        GET /history/{clerkUserId}
+        DELETE /history/{clerkUserId}/{id}
+        DELETE /history/{clerkUserId}
+    }
+
+    class "AdminDashboard.jsx" as Admin <<Page>> {
+        - users : User[]
+        --
+        + fetchUsers() : void
+        + toggleAccess(clerkId, status) : void
+        --
+        **API Calls:**
+        GET /admin/users
+        POST /admin/grant-access/{clerkId}
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  SHARED COMPONENTS & HOOKS
+' ══════════════════════════════════════════════════════
+
+package "Shared Components & Hooks" as SHARED #161b22 {
+
+    class "ThemeContext.jsx" as ThemeCtx <<Context>> {
+        - theme : "light" | "dark"
+        --
+        + toggleTheme() : void
+        + ThemeProvider : Component
+        + useTheme() : hook
+    }
+
+    class "ThemeToggle.jsx" as ThemeToggle <<Component>> {
+        Uses useTheme() hook
+        Renders sun/moon toggle button
+    }
+
+    class "useReveal.js" as UseReveal <<Custom Hook>> {
+        + useReveal(options?) : ref
+        + useRevealList(options?) : [rootRef, addToRefs]
+        --
+        IntersectionObserver-based
+        scroll reveal animations
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  EXTERNAL DEPENDENCIES
+' ══════════════════════════════════════════════════════
+
+package "External Dependencies" as EXT_FE #161b22 {
+
+    class "Clerk (Frontend SDK)" as Clerk <<Auth Provider>> {
+        + @clerk/clerk-react
+        --
+        + ClerkProvider : Component
+        + useUser() : hook
+        + SignedIn / SignedOut : Component
+        + SignInButton : Component
+        + UserButton : Component
+    }
+
+    class "React Router" as Router <<Routing>> {
+        + BrowserRouter : Component
+        + Routes / Route : Component
+        + useNavigate() : hook
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  RELATIONSHIPS
+' ══════════════════════════════════════════════════════
+
+App --> Home
+App --> Detection
+App --> History
+App --> Admin
+App --> ThemeCtx : wraps with ThemeProvider
+App --> ThemeToggle : in Navbar
+Home --> UseReveal : uses
+ThemeToggle --> ThemeCtx : useTheme()
+
+Main -[#7c3aed]-> Clerk : ClerkProvider\n(publishableKey)
+App -[#7c3aed]-> Clerk : useUser(), SignedIn/Out\nSignInButton, UserButton
+Main -[#58a6ff]-> Router : BrowserRouter
+
+Detection -[#e6b422]-> App : uses API_BASE_URL
+History -[#e6b422]-> App : uses API_BASE_URL
+Admin -[#e6b422]-> App : uses API_BASE_URL
+
+' ══════════════════════════════════════════════════════
+'  NOTES
+' ══════════════════════════════════════════════════════
+
+note bottom of Detection
+  **Detection Flow (Frontend):**
+  1. User uploads solar panel image
+  2. Preview rendered via FileReader
+  3. POSTs image to /predict/yolov8
+  4. Displays annotated image + defect counts
+  5. User can save result to history
+end note
+
+note bottom of App
+  **Route Guards:**
+  - /detect: requires sign-in + access granted
+  - /history: requires sign-in
+  - /admin: requires admin role
+end note
+
+legend right
+  |= Category |= Technology |
+  | Framework | React 18, Vite |
+  | Auth | Clerk React SDK |
+  | Routing | React Router v6 |
+  | Styling | Vanilla CSS + Dark/Light themes |
+  | Animation | IntersectionObserver (useReveal) |
+endlegend
+
+@enduml

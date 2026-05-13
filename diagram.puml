@@ -1,0 +1,331 @@
+@startuml Solar_Panel_Defect_Detection_System
+
+!theme cerulean
+skinparam backgroundColor #0d1117
+skinparam defaultFontColor #c9d1d9
+skinparam defaultFontName Inter
+skinparam defaultFontSize 12
+skinparam ArrowColor #58a6ff
+skinparam ArrowThickness 1.5
+
+skinparam package {
+    BackgroundColor #161b22
+    BorderColor #30363d
+    FontColor #58a6ff
+    FontSize 14
+    FontStyle bold
+}
+
+skinparam class {
+    BackgroundColor #1c2128
+    BorderColor #30363d
+    HeaderBackgroundColor #21262d
+    FontColor #c9d1d9
+    AttributeFontColor #8b949e
+    StereotypeFontColor #7c3aed
+}
+
+skinparam note {
+    BackgroundColor #1c2128
+    BorderColor #30363d
+    FontColor #8b949e
+}
+
+title **Solar Panel Defect Detection System — UML Class Diagram**\n//YOLOv8-Powered SaaS Architecture//
+
+' ══════════════════════════════════════════════════════
+'  FRONTEND LAYER
+' ══════════════════════════════════════════════════════
+
+package "Frontend (React + Vite)" as FE #161b22 {
+
+    class "main.jsx" as Main <<Entry Point>> {
+        + PUBLISHABLE_KEY : string
+        --
+        Renders <ClerkProvider>
+        wrapping <BrowserRouter> and <App>
+    }
+
+    class "App.jsx" as App <<Root Component>> {
+        + API_BASE_URL : string = "http://localhost:8000"
+        --
+        + AppContent() : JSX
+        + Navbar() : JSX
+        + Footer() : JSX
+        + SignInRequired() : JSX
+        + AccessDenied() : JSX
+        --
+        Routes:
+        .. / → Home ..
+        .. /detect → Detection (guarded) ..
+        .. /history → History (guarded) ..
+        .. /admin → AdminDashboard (guarded) ..
+    }
+
+    class "Home.jsx" as Home <<Page>> {
+        + Hero() : JSX
+        + SolarEnergyImportance() : JSX
+        + DefectDetectionImportance() : JSX
+        + Workflow() : JSX
+        + TechStack() : JSX
+        + DefectTypes() : JSX
+        + Features() : JSX
+        + FAQ() : JSX
+        + About() : JSX
+    }
+
+    class "Detection.jsx" as Detection <<Page>> {
+        - file : File
+        - preview : string
+        - result : object
+        - loading : boolean
+        --
+        + handleUpload() : void
+        + handlePredict() : void
+        + saveToHistory() : void
+        --
+        POST /predict/yolov8
+        POST /history/save
+    }
+
+    class "History.jsx" as History <<Page>> {
+        - scans : DetectionRecord[]
+        - selectedScan : DetectionRecord
+        --
+        + fetchHistory() : void
+        + deleteScan() : void
+        + clearAll() : void
+        --
+        GET /history/{clerkUserId}
+        DELETE /history/{clerkUserId}/{id}
+        DELETE /history/{clerkUserId}
+    }
+
+    class "AdminDashboard.jsx" as Admin <<Page>> {
+        - users : User[]
+        --
+        + fetchUsers() : void
+        + toggleAccess(clerkId, status) : void
+        --
+        GET /admin/users
+        POST /admin/grant-access/{clerkId}
+    }
+
+    class "ThemeContext.jsx" as ThemeCtx <<Context>> {
+        - theme : "light" | "dark"
+        --
+        + toggleTheme() : void
+        + ThemeProvider : Component
+        + useTheme() : hook
+    }
+
+    class "ThemeToggle.jsx" as ThemeToggle <<Component>> {
+        Uses useTheme() hook
+        Renders sun/moon toggle button
+    }
+
+    class "useReveal.js" as UseReveal <<Custom Hook>> {
+        + useReveal(options?) : ref
+        + useRevealList(options?) : [rootRef, addToRefs]
+        --
+        IntersectionObserver-based
+        scroll reveal animations
+    }
+
+    Main --> App : renders
+    App --> Home
+    App --> Detection
+    App --> History
+    App --> Admin
+    App --> ThemeCtx : wraps with ThemeProvider
+    App --> ThemeToggle : in Navbar
+    Home --> UseReveal : uses
+}
+
+' ══════════════════════════════════════════════════════
+'  BACKEND LAYER
+' ══════════════════════════════════════════════════════
+
+package "Backend (FastAPI + Python)" as BE #161b22 {
+
+    class "main.py" as FastAPIApp <<FastAPI App>> {
+        + app : FastAPI
+        + WEBHOOK_SECRET : string
+        + RESULT_FOLDER : string
+        --
+        **API Endpoints:**
+        .. Root ..
+        GET  /
+        .. Prediction ..
+        POST /predict/yolov8
+        .. Detection History ..
+        POST   /history/save
+        GET    /history/{clerk_user_id}
+        DELETE /history/{clerk_user_id}/{detection_id}
+        DELETE /history/{clerk_user_id}
+        .. Admin ..
+        GET  /admin/users
+        POST /admin/sync-user
+        POST /admin/grant-access/{clerk_id}
+        .. Webhooks ..
+        POST /webhooks/clerk
+    }
+
+    class "predictor.py" as Predictor <<Service>> {
+        + UPLOAD_FOLDER : string
+        + RESULT_FOLDER : string
+        --
+        + predict_image(file: UploadFile) : dict
+        --
+        Returns:
+        {result_image_url, total_defects,
+         defects, model_used}
+    }
+
+    class "model_loader.py" as ModelLoader <<Singleton>> {
+        - model : YOLO
+        --
+        + get_model() : YOLO
+        --
+        Loads models/best.pt at startup
+    }
+
+    class "detections.py" as DetectionService <<Service>> {
+        --
+        + save_detection(clerk_user_id, entry) : dict
+        + get_detections(clerk_user_id, limit) : list
+        + delete_detection(detection_id, clerk_user_id) : bool
+        + clear_detections(clerk_user_id) : int
+        - _serialize(doc) : dict
+    }
+
+    class "sync.py" as SyncService <<Service>> {
+        + CLERK_SECRET_KEY : string
+        --
+        + sync_user(clerk_user_data) : dict
+        + get_all_users() : list
+        + update_user_access(clerk_id, status) : bool
+        + update_clerk_metadata(clerk_id, metadata) : bool
+    }
+
+    class "db.py" as DB <<Database>> {
+        + MONGO_URI : string
+        + client : AsyncIOMotorClient
+        + db : Database ("solar_vision_ai")
+        + users_collection : Collection
+        + detections_collection : Collection
+        --
+        + get_db_status() : string
+    }
+
+    FastAPIApp --> Predictor : /predict/yolov8
+    FastAPIApp --> DetectionService : /history/*
+    FastAPIApp --> SyncService : /admin/*, /webhooks/clerk
+    FastAPIApp --> DB : GET /
+    Predictor --> ModelLoader : get_model()
+    DetectionService --> DB : detections_collection
+    SyncService --> DB : users_collection
+}
+
+' ══════════════════════════════════════════════════════
+'  EXTERNAL SERVICES
+' ══════════════════════════════════════════════════════
+
+package "External Services" as EXT #161b22 {
+
+    class "Clerk" as Clerk <<Auth Provider>> {
+        + Authentication (OAuth, Email)
+        + User Management
+        + Session Management
+        + Public Metadata
+        --
+        Frontend: @clerk/clerk-react
+        Backend: Svix Webhook + REST API
+    }
+
+    class "MongoDB Atlas" as Mongo <<Database>> {
+        + Database: solar_vision_ai
+        --
+        **Collections:**
+        .. users ..
+        clerkUserId : string
+        name : string
+        email : string
+        imageUrl : string
+        role : string
+        hasAccess : boolean
+        createdAt : datetime
+        updatedAt : datetime
+        .. detections ..
+        _id : ObjectId
+        clerkUserId : string
+        fileName : string
+        fileSize : number
+        model_used : string
+        total_defects : number
+        defects : object
+        result_image_url : string
+        timestamp : datetime
+    }
+
+    class "YOLOv8m Model" as YOLO <<AI/ML>> {
+        + File: models/best.pt
+        + Framework: Ultralytics
+        + Resolution: 640×640
+        + Epochs: 100
+        + mAP@0.5: 76%
+        --
+        **12 Defect Classes:**
+        Crack, Scratch, Corner,
+        Black Core, Finger, Fragment,
+        Horizontal Dislocation,
+        Printing Error, Short Circuit,
+        Star Crack, Thick Line,
+        Vertical Dislocation
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  RELATIONSHIPS ACROSS LAYERS
+' ══════════════════════════════════════════════════════
+
+FE -[#58a6ff]-> BE : REST API\n(HTTP Requests)
+Main -[#7c3aed]-> Clerk : ClerkProvider\n(publishableKey)
+App -[#7c3aed]-> Clerk : useUser(), SignedIn/Out\nSignInButton, UserButton
+SyncService -[#7c3aed]-> Clerk : Clerk Backend API\n(PATCH metadata)
+FastAPIApp -[#7c3aed]-> Clerk : Webhook verification\n(Svix)
+DB -[#e6b422]-> Mongo : motor (AsyncIOMotorClient)
+ModelLoader -[#f97583]-> YOLO : Ultralytics YOLO()
+
+' ══════════════════════════════════════════════════════
+'  DATA FLOW NOTES
+' ══════════════════════════════════════════════════════
+
+note bottom of Detection
+  **Detection Flow:**
+  1. User uploads solar panel image
+  2. Frontend POSTs to /predict/yolov8
+  3. Backend saves file, runs YOLOv8 inference
+  4. Returns annotated image + defect counts
+  5. User can save result to history
+end note
+
+note bottom of SyncService
+  **User Sync Flow:**
+  1. User signs in via Clerk
+  2. Frontend POSTs user data to /admin/sync-user
+  3. Backend creates/finds user in MongoDB
+  4. Admin can grant/revoke access
+  5. Access updates pushed to both MongoDB & Clerk
+end note
+
+legend right
+  |= Layer |= Technology |
+  | Frontend | React, Vite, Clerk React SDK |
+  | Backend  | FastAPI, Uvicorn, Python |
+  | Database | MongoDB Atlas, Motor (async) |
+  | AI/ML    | YOLOv8m, Ultralytics, PyTorch |
+  | Auth     | Clerk, Svix Webhooks |
+endlegend
+
+@enduml

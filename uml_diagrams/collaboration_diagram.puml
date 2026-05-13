@@ -1,0 +1,35 @@
+@startuml Collaboration_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1.2
+
+skinparam object {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+title <b>Collaboration Diagram — Defect Detection Flow</b>
+
+object "User" as User
+object "Frontend\n(React)" as FE
+object "Backend\n(FastAPI)" as API
+object "YOLOv8\nModel" as YOLO
+object "MongoDB\nAtlas" as DB
+object "Clerk\nAuth" as Clerk
+
+User -- FE : 1: Upload Image\n2: Click Detect\n7: View Results
+FE -- API : 3: POST /predict/yolov8\n6: JSON Response
+API -- YOLO : 4: Run Inference
+API -- API : 5: Save Annotated Image
+FE -- API : 8: POST /history/save
+API -- DB : 9: Insert Detection
+FE -- Clerk : 10: Sign In / Sign Up
+API -- DB : 11: Sync User Data
+API -- Clerk : 12: Webhook Events
+
+@enduml

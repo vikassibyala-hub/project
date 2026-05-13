@@ -1,0 +1,68 @@
+@startuml Use_Case_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1
+
+skinparam usecase {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+    FontSize 11
+}
+
+skinparam actor {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+skinparam rectangle {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+    FontSize 13
+    FontStyle bold
+}
+
+left to right direction
+
+actor "User" as User
+actor "Admin" as Admin
+
+rectangle "Solar Panel Defect Detection System" {
+    (Sign In / Sign Up) as UC1
+    (Upload Solar Panel Image) as UC2
+    (Run Defect Detection) as UC3
+    (View Annotated Results) as UC4
+    (Save to History) as UC5
+    (View Detection History) as UC6
+    (Delete Detection Record) as UC7
+    (Clear All History) as UC8
+    (Toggle Theme) as UC9
+    (Manage Users) as UC10
+    (Grant / Revoke Access) as UC11
+    (View All Users) as UC12
+}
+
+User -- UC1
+User -- UC2
+User -- UC3
+User -- UC4
+User -- UC5
+User -- UC6
+User -- UC7
+User -- UC8
+User -- UC9
+
+Admin -- UC1
+Admin -- UC2
+Admin -- UC3
+Admin -- UC10
+Admin -- UC11
+Admin -- UC12
+
+@enduml

@@ -1,0 +1,116 @@
+@startuml Class_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1.5
+
+skinparam class {
+    BackgroundColor white
+    BorderColor black
+    HeaderBackgroundColor #E8E8E8
+    FontColor black
+    AttributeFontColor black
+    StereotypeFontColor #555555
+}
+
+skinparam note {
+    BackgroundColor #FFFFF0
+    BorderColor black
+    FontColor black
+}
+
+title <b>Class Diagram</b>\nSolar Panel Defect Detection System
+
+class "User" as User {
+    + userID : string
+    + name : string
+    + email : string
+    + imageUrl : string
+    + role : string
+    + hasAccess : boolean
+    + createdAt : datetime
+    + updatedAt : datetime
+    --
+    + register() : void
+    + login() : void
+}
+
+class "Admin" as Admin {
+    --
+    + manageUsers() : void
+    + viewLogs() : void
+    + grantAccess(clerkId, status) : void
+    + revokeAccess(clerkId) : void
+}
+
+class "Detection" as Detection {
+    + detectionID : string
+    + fileName : string
+    + fileSize : number
+    + totalDefects : int
+    + defects : object
+    + resultImageUrl : string
+    + timestamp : datetime
+    --
+    + uploadImage(file) : void
+    + runDetection() : dict
+    + saveToHistory() : void
+}
+
+class "YOLOv8Model" as YOLO <<Singleton>> {
+    - model : YOLO
+    + modelPath : string = "models/best.pt"
+    + resolution : string = "640x640"
+    + epochs : int = 100
+    + defectClasses : int = 12
+    --
+    + loadModel() : YOLO
+    + predict(image) : Results
+    + getDefects() : dict
+}
+
+class "DetectionHistory" as History {
+    + records : list
+    + clerkUserId : string
+    --
+    + fetchHistory(userId, limit) : list
+    + deleteRecord(detectionId) : bool
+    + clearAll(userId) : int
+    - _serialize(doc) : dict
+}
+
+class "DatabaseLayer" as DB {
+    + mongoURI : string
+    + client : AsyncIOMotorClient
+    + database : string = "solar_vision_ai"
+    + usersCollection : Collection
+    + detectionsCollection : Collection
+    --
+    + connect() : void
+    + getStatus() : string
+    + insert(doc) : ObjectId
+    + find(query) : list
+    + delete(query) : bool
+}
+
+Admin --|> User : inherits
+User "1" -- "*" Detection : performs >
+Detection ..> YOLO : uses >
+Detection "1" -- "*" History : stores in >
+History ..> DB : persists via >
+User ..> DB : stored in >
+
+note bottom of YOLO
+  <b>12 Defect Classes:</b>
+  Crack, Scratch, Corner,
+  Black Core, Finger, Fragment,
+  Horizontal Dislocation,
+  Printing Error, Short Circuit,
+  Star Crack, Thick Line,
+  Vertical Dislocation
+end note
+
+@enduml

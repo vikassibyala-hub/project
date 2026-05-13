@@ -1,0 +1,53 @@
+@startuml ER_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1.2
+skinparam linetype ortho
+
+skinparam entity {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+title <b>ER Diagram</b>\nDatabase: solar_vision_ai
+
+entity "User" {
+    clerkUserId (PK)
+    --
+    name
+    email
+    role
+    hasAccess
+    createdAt
+}
+
+entity "Detection" {
+    _id (PK)
+    --
+    clerkUserId (FK)
+    fileName
+    fileSize
+    model_used
+    total_defects
+    defects
+    result_image_url
+    timestamp
+}
+
+entity "Model" {
+    model_id (PK)
+    --
+    model_path
+    resolution
+    defect_classes
+}
+
+User ||--o{ Detection : "performs"
+Detection }o--|| Model : "uses"
+
+@enduml

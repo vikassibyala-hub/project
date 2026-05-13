@@ -1,0 +1,264 @@
+@startuml Solar_Panel_Backend_Architecture
+
+!theme cerulean
+skinparam backgroundColor #0d1117
+skinparam defaultFontColor #c9d1d9
+skinparam defaultFontName Inter
+skinparam defaultFontSize 12
+skinparam ArrowColor #58a6ff
+skinparam ArrowThickness 1.5
+
+skinparam package {
+    BackgroundColor #161b22
+    BorderColor #30363d
+    FontColor #58a6ff
+    FontSize 14
+    FontStyle bold
+}
+
+skinparam class {
+    BackgroundColor #1c2128
+    BorderColor #30363d
+    HeaderBackgroundColor #21262d
+    FontColor #c9d1d9
+    AttributeFontColor #8b949e
+    StereotypeFontColor #7c3aed
+}
+
+skinparam note {
+    BackgroundColor #1c2128
+    BorderColor #30363d
+    FontColor #8b949e
+}
+
+title **Solar Panel Defect Detection — Backend UML Class Diagram**\n//FastAPI + YOLOv8 + MongoDB Architecture//
+
+' ══════════════════════════════════════════════════════
+'  FASTAPI APPLICATION
+' ══════════════════════════════════════════════════════
+
+package "FastAPI Application" as APP #161b22 {
+
+    class "main.py" as FastAPIApp <<FastAPI App>> {
+        + app : FastAPI
+        + WEBHOOK_SECRET : string
+        + RESULT_FOLDER : string
+        --
+        **API Endpoints:**
+        .. Root ..
+        GET  /
+        .. Prediction ..
+        POST /predict/yolov8
+        .. Detection History ..
+        POST   /history/save
+        GET    /history/{clerk_user_id}
+        DELETE /history/{clerk_user_id}/{detection_id}
+        DELETE /history/{clerk_user_id}
+        .. Admin ..
+        GET  /admin/users
+        POST /admin/sync-user
+        POST /admin/grant-access/{clerk_id}
+        .. Webhooks ..
+        POST /webhooks/clerk
+        --
+        **Middleware:**
+        CORSMiddleware (React origin)
+        StaticFiles (/results)
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  SERVICES LAYER
+' ══════════════════════════════════════════════════════
+
+package "Services" as SVC #161b22 {
+
+    class "predictor.py" as Predictor <<Service>> {
+        + UPLOAD_FOLDER : string
+        + RESULT_FOLDER : string
+        --
+        + predict_image(file: UploadFile) : dict
+        --
+        **Returns:**
+        {result_image_url, total_defects,
+         defects, model_used}
+        --
+        Saves uploaded file → runs inference
+        → saves annotated result → returns JSON
+    }
+
+    class "detections.py" as DetectionService <<Service>> {
+        --
+        + save_detection(clerk_user_id, entry) : dict
+        + get_detections(clerk_user_id, limit) : list
+        + delete_detection(detection_id, clerk_user_id) : bool
+        + clear_detections(clerk_user_id) : int
+        - _serialize(doc) : dict
+        --
+        CRUD operations for detection
+        history records in MongoDB
+    }
+
+    class "sync.py" as SyncService <<Service>> {
+        + CLERK_SECRET_KEY : string
+        --
+        + sync_user(clerk_user_data) : dict
+        + get_all_users() : list
+        + update_user_access(clerk_id, status) : bool
+        + update_clerk_metadata(clerk_id, metadata) : bool
+        --
+        Manages user sync between
+        Clerk and MongoDB
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  AI / ML LAYER
+' ══════════════════════════════════════════════════════
+
+package "AI / ML Layer" as ML #161b22 {
+
+    class "model_loader.py" as ModelLoader <<Singleton>> {
+        - model : YOLO
+        --
+        + get_model() : YOLO
+        --
+        Loads models/best.pt at startup
+        (lazy singleton pattern)
+    }
+
+    class "YOLOv8 Model" as YOLO <<AI/ML>> {
+        + File: models/best.pt
+        + Framework: Ultralytics
+        + Resolution: 640×640
+        + Epochs: 100
+        + mAP@0.5: 76%
+        --
+        **12 Defect Classes:**
+        Crack, Scratch, Corner,
+        Black Core, Finger, Fragment,
+        Horizontal Dislocation,
+        Printing Error, Short Circuit,
+        Star Crack, Thick Line,
+        Vertical Dislocation
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  DATA LAYER
+' ══════════════════════════════════════════════════════
+
+package "Data Layer" as DATA #161b22 {
+
+    class "db.py" as DB <<Database>> {
+        + MONGO_URI : string
+        + client : AsyncIOMotorClient
+        + db : Database ("solar_vision_ai")
+        + users_collection : Collection
+        + detections_collection : Collection
+        --
+        + get_db_status() : string
+    }
+
+    class "MongoDB Atlas" as Mongo <<Cloud Database>> {
+        + Database: solar_vision_ai
+        --
+        **Collections:**
+        .. users ..
+        clerkUserId : string
+        name : string
+        email : string
+        imageUrl : string
+        role : string
+        hasAccess : boolean
+        createdAt : datetime
+        updatedAt : datetime
+        .. detections ..
+        _id : ObjectId
+        clerkUserId : string
+        fileName : string
+        fileSize : number
+        model_used : string
+        total_defects : number
+        defects : object
+        result_image_url : string
+        timestamp : datetime
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  EXTERNAL INTEGRATIONS
+' ══════════════════════════════════════════════════════
+
+package "External Integrations" as EXT_BE #161b22 {
+
+    class "Clerk (Backend)" as Clerk <<Auth Provider>> {
+        + Svix Webhook Verification
+        + Clerk Backend REST API
+        --
+        POST /webhooks/clerk
+        → user.created / user.updated
+        --
+        PATCH /users/{id}/metadata
+        → update publicMetadata
+    }
+}
+
+' ══════════════════════════════════════════════════════
+'  RELATIONSHIPS
+' ══════════════════════════════════════════════════════
+
+FastAPIApp --> Predictor : /predict/yolov8
+FastAPIApp --> DetectionService : /history/*
+FastAPIApp --> SyncService : /admin/*, /webhooks/clerk
+FastAPIApp --> DB : GET / (health check)
+
+Predictor --> ModelLoader : get_model()
+ModelLoader -[#f97583]-> YOLO : Ultralytics YOLO()
+
+DetectionService --> DB : detections_collection
+SyncService --> DB : users_collection
+DB -[#e6b422]-> Mongo : motor (AsyncIOMotorClient)
+
+SyncService -[#7c3aed]-> Clerk : Clerk Backend API\n(PATCH metadata)
+FastAPIApp -[#7c3aed]-> Clerk : Webhook verification\n(Svix)
+
+' ══════════════════════════════════════════════════════
+'  NOTES
+' ══════════════════════════════════════════════════════
+
+note bottom of Predictor
+  **Prediction Pipeline:**
+  1. Receive uploaded image (UploadFile)
+  2. Save to uploads/ directory
+  3. Load YOLOv8m model (singleton)
+  4. Run inference at 640×640
+  5. Save annotated result to results/
+  6. Return JSON with defect counts
+end note
+
+note bottom of SyncService
+  **User Sync Flow:**
+  1. Clerk webhook fires on user event
+  2. Svix verifies webhook signature
+  3. Backend upserts user in MongoDB
+  4. Admin toggles access via API
+  5. Access status pushed to Clerk metadata
+end note
+
+note right of FastAPIApp
+  **Static File Serving:**
+  /results → annotated images
+  served via StaticFiles mount
+end note
+
+legend right
+  |= Layer |= Technology |
+  | API Framework | FastAPI, Uvicorn |
+  | AI/ML | YOLOv8m, Ultralytics, PyTorch |
+  | Database | MongoDB Atlas, Motor (async) |
+  | Auth | Clerk, Svix Webhooks |
+  | Language | Python 3.10+ |
+endlegend
+
+@enduml

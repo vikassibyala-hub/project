@@ -1,0 +1,94 @@
+@startuml Component_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1.5
+
+skinparam component {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+    StereotypeFontColor #555555
+}
+
+skinparam package {
+    BackgroundColor #F8F8F8
+    BorderColor black
+    FontColor black
+    FontSize 14
+    FontStyle bold
+}
+
+skinparam interface {
+    BackgroundColor white
+    BorderColor black
+}
+
+title <b>Component Diagram</b>\nSolar Panel Defect Detection System
+
+package "Frontend Layer (React + Vite)" as FE {
+    component [main.jsx\n<<Entry Point>>] as Main
+    component [App.jsx\n<<Router & Layout>>] as App
+    component [Detection.jsx\n<<Detection Page>>] as Detection
+    component [History.jsx\n<<History Page>>] as History
+    component [Home.jsx\n<<Landing Page>>] as Home
+    component [AdminDashboard.jsx\n<<Admin Page>>] as AdminPage
+    component [ThemeContext.jsx\n<<Theme Provider>>] as Theme
+
+    Main --> App
+    App --> Home
+    App --> Detection
+    App --> History
+    App --> AdminPage
+    App --> Theme
+}
+
+package "Backend Layer (FastAPI + Python)" as BE {
+    component [main.py\n<<FastAPI App>>] as FastAPI
+    component [predictor.py\n<<Prediction Service>>] as Predictor
+    component [detections.py\n<<Detection Service>>] as DetService
+    component [sync.py\n<<User Sync Service>>] as SyncService
+    component [model_loader.py\n<<Model Loader>>] as ModelLoader
+    component [db.py\n<<Database Layer>>] as DBLayer
+
+    FastAPI --> Predictor
+    FastAPI --> DetService
+    FastAPI --> SyncService
+    Predictor --> ModelLoader
+    DetService --> DBLayer
+    SyncService --> DBLayer
+}
+
+package "External Services" as EXT {
+    component [Clerk\n<<Authentication>>] as Clerk
+    database "MongoDB Atlas\n<<Cloud Database>>" as Mongo
+    component [YOLOv8m Model\n<<AI/ML Engine>>] as YOLO
+}
+
+' ── Interfaces between layers ──
+
+interface "REST API" as IREST
+interface "Auth SDK" as IAUTH
+interface "Motor Driver" as IMOTOR
+interface "Ultralytics" as IULTRA
+interface "Webhooks" as IWEBHOOK
+
+FE -down- IREST
+IREST -down- BE
+
+Main -right- IAUTH
+IAUTH -right- Clerk
+
+DBLayer -down- IMOTOR
+IMOTOR -down- Mongo
+
+ModelLoader -down- IULTRA
+IULTRA -down- YOLO
+
+SyncService -down- IWEBHOOK
+IWEBHOOK -down- Clerk
+
+@enduml

@@ -1,0 +1,47 @@
+@startuml architecture_diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 14
+skinparam ArrowColor black
+skinparam ArrowThickness 1.5
+skinparam RoundCorner 15
+
+skinparam actorStyle awesome
+
+title <size:24>SYSTEM ARCHITECTURE</size>
+
+actor "User" as user
+actor "Admin" as admin
+database "Database" as db #DAE8FC
+
+rectangle "System Process" #FFF8DC {
+    rectangle "Login" as login #FFE6CC
+    rectangle "Register" as register #E1D5E7
+    
+    hexagon "Credentials" as creds #E1D5E7
+    
+    rectangle "Frontend\n==\n* User/Admin Login\n* Prediction Page\n* Get Results\n* Admin Dashboard\n* Logout" as frontend #E1D5E7
+    
+    rectangle "Backend\n==\n* Data Collection\n* Exploratory Data Analysis\n* Splitting the data\n* Data Preprocessing\n* Model building with algorithms\n* Prediction is done based on the input data" as backend #FFE6CC
+}
+
+rectangle "Outputs\n==\n1. black_core\n2. corner\n3. crack\n4. finger\n5. fragment\n6. horizontal_dislocation\n7. printing_error\n8. scratch\n9. short_circuit\n10. star_crack\n11. hick_line\n12. vertical_dislocation" as outputs #ccffcc
+
+user -down-> login
+admin -down-> login
+
+user -down-> register
+admin -down-> register
+
+register -up-> db
+
+login -down-> creds
+
+creds -left-> login : Invalid Credentials
+creds -down-> frontend : Valid Credentials
+creds -right-> backend : Valid Credentials
+
+backend -right-> outputs
+
+@enduml

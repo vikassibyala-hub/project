@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Module Descriptions - Solar Panel Defect Detection System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    color: #1a1a2e;
+    background: #fff;
+    padding: 50px 60px;
+    line-height: 1.6;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 3px solid #4361ee;
+  }
+
+  .header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #4361ee;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .header p {
+    font-size: 14px;
+    color: #555;
+  }
+
+  .module {
+    margin-bottom: 32px;
+    page-break-inside: avoid;
+  }
+
+  .module-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .module-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .m1 .module-number { background: #4361ee; }
+  .m2 .module-number { background: #e63946; }
+  .m3 .module-number { background: #2a9d8f; }
+  .m4 .module-number { background: #e76f51; }
+  .m5 .module-number { background: #6a4c93; }
+  .m6 .module-number { background: #1d3557; }
+
+  .module-title h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .purpose {
+    font-size: 13.5px;
+    color: #444;
+    margin-bottom: 12px;
+    padding-left: 48px;
+    font-style: italic;
+  }
+
+  .features-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #333;
+    padding-left: 48px;
+    margin-bottom: 6px;
+  }
+
+  .features {
+    list-style: none;
+    padding-left: 48px;
+    margin-bottom: 12px;
+  }
+
+  .features li {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 5px;
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .features li::before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+  }
+
+  .m1 .features li::before { color: #4361ee; }
+  .m2 .features li::before { color: #e63946; }
+  .m3 .features li::before { color: #2a9d8f; }
+  .m4 .features li::before { color: #e76f51; }
+  .m5 .features li::before { color: #6a4c93; }
+  .m6 .features li::before { color: #1d3557; }
+
+  .features li strong {
+    color: #1a1a2e;
+  }
+
+  .tech-row {
+    padding-left: 48px;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 3px;
+  }
+
+  .tech-row strong {
+    color: #444;
+  }
+
+  .defect-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 3px 16px;
+    padding-left: 66px;
+    margin: 6px 0 8px;
+    font-size: 12px;
+    color: #555;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 8px 48px 0 48px;
+  }
+
+  @media print {
+    body { padding: 30px 40px; }
+    .module { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>MODULE DESCRIPTIONS</h1>
+  <p>Solar Panel Defect Detection System &mdash; YOLOv8</p>
+</div>
+
+<!-- Module 1 -->
+<div class="module m1">
+  <div class="module-title">
+    <span class="module-number">1</span>
+    <h2>User Module</h2>
+  </div>
+  <p class="purpose">Handles all end-user interactions with the system.</p>
+  <p class="features-label">Key Features:</p>
+  <ul class="features">
+    <li><strong>Registration &amp; Login</strong> &mdash; Users register and sign in via Clerk authentication (Google OAuth / email-password).</li>
+    <li><strong>Image Upload</strong> &mdash; Upload solar panel images (JPG/PNG) for defect analysis.</li>
+    <li><strong>View Predictions</strong> &mdash; See AI-detected defects with annotated result images, defect counts, and type breakdown.</li>
+    <li><strong>Detection History</strong> &mdash; Browse, review, and delete past detection results.</li>
+    <li><strong>Profile Management</strong> &mdash; View and manage profile via Clerk&rsquo;s UserButton component.</li>
+    <li><strong>Theme Switching</strong> &mdash; Toggle between Light and Dark modes.</li>
+  </ul>
+  <p class="tech-row"><strong>Frontend:</strong> Home.jsx, Detection.jsx, History.jsx, ThemeToggle.jsx</p>
+  <p class="tech-row"><strong>Backend:</strong> POST /predict/yolov8, GET /history/{user_id}, POST /history/save</p>
+  <hr class="divider">
+</div>
+
+<!-- Module 2 -->
+<div class="module m2">
+  <div class="module-title">
+    <span class="module-number">2</span>
+    <h2>Admin Module</h2>
+  </div>
+  <p class="purpose">Provides administrative control over the system and its users.</p>
+  <p class="features-label">Key Features:</p>
+  <ul class="features">
+    <li><strong>Admin Dashboard</strong> &mdash; A dedicated dashboard accessible only to users with the admin role.</li>
+    <li><strong>User Management</strong> &mdash; View all registered users with name, email, join date, role, and access status.</li>
+    <li><strong>Access Control</strong> &mdash; Grant or revoke detection access for individual users with a single click.</li>
+    <li><strong>Statistics Overview</strong> &mdash; View total number of users and the count of users with active access.</li>
+    <li><strong>Clerk Metadata Sync</strong> &mdash; Permission updates are synced back to Clerk&rsquo;s publicMetadata via the Backend API.</li>
+  </ul>
+  <p class="tech-row"><strong>Frontend:</strong> AdminDashboard.jsx</p>
+  <p class="tech-row"><strong>Backend:</strong> GET /admin/users, POST /admin/grant-access/{clerk_id}, POST /admin/sync-user</p>
+  <hr class="divider">
+</div>
+
+<!-- Module 3 -->
+<div class="module m3">
+  <div class="module-title">
+    <span class="module-number">3</span>
+    <h2>Authentication Module</h2>
+  </div>
+  <p class="purpose">Manages secure user authentication and session handling across the application.</p>
+  <p class="features-label">Key Features:</p>
+  <ul class="features">
+    <li><strong>Clerk Integration</strong> &mdash; Uses Clerk as the third-party authentication provider for sign-up, sign-in, and sessions.</li>
+    <li><strong>OAuth Support</strong> &mdash; Supports social login via Google.</li>
+    <li><strong>Role-Based Access Control (RBAC)</strong> &mdash; Distinguishes between user and admin roles using Clerk&rsquo;s publicMetadata.</li>
+    <li><strong>Protected Routes</strong> &mdash; Routes (/detect, /history, /admin) are guarded; unauthenticated users see &ldquo;Sign In Required&rdquo;.</li>
+    <li><strong>Webhook Verification</strong> &mdash; Backend verifies Clerk webhook payloads using Svix for secure user sync events.</li>
+  </ul>
+  <p class="tech-row"><strong>Frontend:</strong> main.jsx (ClerkProvider), App.jsx (SignedIn/SignedOut guards)</p>
+  <p class="tech-row"><strong>Backend:</strong> POST /webhooks/clerk, sync.py</p>
+  <hr class="divider">
+</div>
+
+<!-- Module 4 -->
+<div class="module m4">
+  <div class="module-title">
+    <span class="module-number">4</span>
+    <h2>Detection / Prediction Module</h2>
+  </div>
+  <p class="purpose">Core AI module that performs defect detection on uploaded solar panel images.</p>
+  <p class="features-label">Key Features:</p>
+  <ul class="features">
+    <li><strong>Image Processing</strong> &mdash; Accepts uploaded images, saves them to the server, and feeds them to the YOLOv8m model.</li>
+    <li><strong>YOLOv8m Inference</strong> &mdash; Runs object detection using a YOLOv8m model trained on 12 solar panel defect classes.</li>
+    <li><strong>Result Generation</strong> &mdash; Produces an annotated image with bounding boxes drawn around detected defects.</li>
+    <li><strong>Defect Classification</strong> &mdash; Identifies and counts defects across 12 classes:</li>
+  </ul>
+  <div class="defect-grid">
+    <span>1. black_core</span><span>2. corner</span><span>3. crack</span><span>4. finger</span>
+    <span>5. fragment</span><span>6. horizontal_dislocation</span><span>7. printing_error</span><span>8. scratch</span>
+    <span>9. short_circuit</span><span>10. star_crack</span><span>11. hick_line</span><span>12. vertical_dislocation</span>
+  </div>
+  <p class="tech-row"><strong>Backend:</strong> predictor.py, model_loader.py, POST /predict/yolov8</p>
+  <hr class="divider">
+</div>
+
+<!-- Module 5 -->
+<div class="module m5">
+  <div class="module-title">
+    <span class="module-number">5</span>
+    <h2>History Module</h2>
+  </div>
+  <p class="purpose">Stores, retrieves, and manages past detection results for each user.</p>
+  <p class="features-label">Key Features:</p>
+  <ul class="features">
+    <li><strong>Save Results</strong> &mdash; After each prediction, the detection result (image URL, defects, metadata) is saved to MongoDB.</li>
+    <li><strong>View History</strong> &mdash; Users can browse past scans in a list view, sorted newest first.</li>
+    <li><strong>Detail View</strong> &mdash; Click any past scan to see the full annotated result image and defect breakdown.</li>
+    <li><strong>Delete Scans</strong> &mdash; Users can delete individual detection records or clear entire history.</li>
+  </ul>
+  <p class="tech-row"><strong>Frontend:</strong> History.jsx</p>
+  <p class="tech-row"><strong>Backend:</strong> detections.py, POST /history/save, GET /history/{user_id}, DELETE /history/{user_id}</p>
+  <hr class="divider">
+</div>
+
+<!-- Module 6 -->
+<div class="module m6">
+  <div class="module-title">
+    <span class="module-number">6</span>
+    <h2>Database Module</h2>
+  </div>
+  <p class="purpose">Handles all data persistence and database connectivity for the system.</p>
+  <p class="features-label">Key Features:</p>
+  <ul class="features">
+    <li><strong>MongoDB Atlas</strong> &mdash; Cloud-hosted NoSQL database for storing all application data.</li>
+    <li><strong>Motor (Async Driver)</strong> &mdash; Uses the motor async driver for non-blocking database operations with FastAPI.</li>
+    <li><strong>Users Collection</strong> &mdash; Stores synced user profiles (clerkUserId, name, email, role, hasAccess, timestamps).</li>
+    <li><strong>Detections Collection</strong> &mdash; Stores detection history records (clerkUserId, fileName, defects, result_image_url, timestamp).</li>
+    <li><strong>CRUD Operations</strong> &mdash; Full Create, Read, Update, Delete support for both collections.</li>
+  </ul>
+  <p class="tech-row"><strong>Backend:</strong> db.py, detections.py, sync.py</p>
+</div>
+
+</body>
+</html>

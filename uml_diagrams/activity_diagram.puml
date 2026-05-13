@@ -1,0 +1,73 @@
+@startuml Activity_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1.2
+
+skinparam activity {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+skinparam diamond {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+title <b>Activity Diagram — Defect Detection Workflow</b>
+
+start
+
+:User Opens Detection Page;
+
+if (User Signed In?) then (Yes)
+else (No)
+  :Show Sign-In Required;
+  stop
+endif
+
+if (Has Access?) then (Yes)
+else (No)
+  :Show Access Denied;
+  stop
+endif
+
+:Upload Solar Panel Image;
+
+:Preview Image;
+
+:Click "Run Detection";
+
+fork
+  :Send Image to Backend;
+fork again
+  :Save Uploaded File;
+end fork
+
+:Load YOLOv8m Model;
+
+:Run Inference (640x640);
+
+:Extract Defect Classes & Counts;
+
+:Save Annotated Result Image;
+
+:Return JSON Response;
+
+:Display Annotated Image
+with Bounding Boxes;
+
+if (Save to History?) then (Yes)
+  :POST to /history/save;
+  :Store in MongoDB;
+else (No)
+endif
+
+stop
+
+@enduml

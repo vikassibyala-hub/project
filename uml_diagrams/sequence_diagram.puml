@@ -1,0 +1,65 @@
+@startuml Sequence_Diagram
+
+skinparam backgroundColor white
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam ArrowThickness 1.5
+
+skinparam participant {
+    BackgroundColor white
+    BorderColor black
+    FontColor black
+}
+
+skinparam sequence {
+    LifeLineBorderColor black
+    LifeLineBackgroundColor #F0F0F0
+    GroupBackgroundColor #F5F5F5
+    GroupBorderColor black
+    DividerBackgroundColor #E8E8E8
+    DividerBorderColor black
+}
+
+title <b>Sequence Diagram — Defect Detection Flow</b>\nSolar Panel Defect Detection System
+
+actor "User" as User
+participant "Frontend\n(React)" as FE
+participant "Backend\n(FastAPI)" as API
+participant "YOLOv8\nModel" as ML
+database "MongoDB\nAtlas" as DB
+
+== Image Upload Phase ==
+
+User -> FE : 1. Upload solar panel image
+FE -> FE : 2. Generate preview (FileReader)
+
+== Detection Phase ==
+
+User -> FE : 3. Click "Run Detection"
+FE -> API : 4. POST /predict/yolov8 (image file)
+activate API
+API -> API : 5. Save image to uploads/
+API -> ML : 6. Run inference (640×640)
+activate ML
+ML --> API : 7. Return bounding boxes + class IDs
+deactivate ML
+API -> API : 8. Count defects, save annotated image
+API --> FE : 9. JSON {result_image_url, defects, total_defects}
+deactivate API
+FE -> FE : 10. Display annotated image + defect counts
+
+== Save to History Phase ==
+
+User -> FE : 11. Click "Save to History"
+FE -> API : 12. POST /history/save (detection data)
+activate API
+API -> DB : 13. Insert detection document
+activate DB
+DB --> API : 14. Inserted ID
+deactivate DB
+API --> FE : 15. {status: "saved"}
+deactivate API
+
+@enduml
